@@ -1,0 +1,600 @@
+SUBROUTINE RDSET(MODE,COUNTRY,REGION,STYR,ENYR,STDOY,ENDOY,POINTLON,POINTLAT,TRES,clmTRES,SEASON,IRR_NAME,IRR,CRP_NAME,CRP_FILE,&
+                 CNFILE,PLT_FILE,YLD_FILE,PRM_FILE,LAI_FILE,WSH_FILE,WSO_FILE,WAR_FILE,WST_FILE,WLF_FILE,WRT_FILE,WDL_FILE,&
+                 CLIM_HEAD,CLIM_FOOT)
+
+  IMPLICIT NONE
+  
+!!!  [OUTPUT]
+  CHARACTER*5 MODE  ! Calculation scale
+  CHARACTER*50 COUNTRY  ! Country for being calculated
+  CHARACTER*50 REGION  ! region within the country
+  INTEGER STYR      ! Start year [Year]
+  INTEGER ENYR      ! End year   [Year]
+  INTEGER STDOY     ! Start DOY  [day]
+  INTEGER ENDOY     ! End   DOY  [day]
+  REAL*8 POINTLON   ! Longitude for point calculation
+  REAL*8 POINTLAT   ! Latitude for point calculation
+
+  INTEGER TRES      ! Time resolution [Second]
+  INTEGER clmTRES   ! Time resolution of climate forcing [Second]
+  CHARACTER*5 SEASON  ! Cultivation season
+
+  REAL*8 WEST
+  REAL*8 EAST
+  REAL*8 NORTH
+  REAL*8 SOUTH
+  REAL*8 WERES
+  REAL*8 NSRES
+  
+  INTEGER IRR
+
+  CHARACTER*200 CRP_NAME    ! Crop selection (Rice, Wheat, Soybean)
+  CHARACTER*200 CRP_FILE    ! File for vegetation parameter
+
+  CHARACTER*200 CNFILE
+  CHARACTER*200 PLT_FILE
+  CHARACTER*200 YLD_FILE
+  CHARACTER*200 PRM_FILE
+  CHARACTER*200 CDI_FILE
+  CHARACTER*200 LAI_FILE
+  CHARACTER*200 WSH_FILE
+  CHARACTER*200 WSO_FILE
+  CHARACTER*200 WAR_FILE
+  CHARACTER*200 WST_FILE
+  CHARACTER*200 WLF_FILE
+  CHARACTER*200 WRT_FILE
+  CHARACTER*200 WDL_FILE
+
+  CHARACTER*200 CLIM_HEAD
+  CHARACTER*200 CLIM_FOOT
+
+
+!!!  [VARIABLE]
+  CHARACTER*5 IRR_NAME
+  INTEGER IER
+
+!!!  [BUFFER VARIABLE]
+  CHARACTER*15 BUF15
+  CHARACTER*200 BUF200
+
+
+  CHARACTER*200 SETFILE
+    
+  CALL GETARG(1,SETFILE)
+  OPEN(10,file=SETFILE,status='old',iostat=IER)
+!  print *,"koko"
+  IF(IER .NE. 0)THEN
+     WRITE(*,*),"SETTING.txt could not be opened"
+     WRITE(*,*),SETFILE
+     STOP
+  ELSE
+     READ(10,'(A200)')BUF200
+     READ(10,'(A15,A)')BUF15,MODE
+     READ(10,'(A15,A50)')BUF15,COUNTRY
+     READ(10,'(A15,A50)')BUF15,REGION
+     READ(10,'(A15,I)')BUF15,STYR
+     READ(10,'(A15,I)')BUF15,ENYR
+     READ(10,'(A15,I)')BUF15,STDOY
+     READ(10,'(A15,I)')BUF15,ENDOY
+     READ(10,'(A15,F)')BUF15,POINTLON
+     READ(10,'(A15,F)')BUF15,POINTLAT
+     READ(10,'(A15,I)')BUF15,TRES
+     READ(10,'(A15,I)')BUF15,clmTRES
+     READ(10,'(A15,A)')BUF15,SEASON
+
+     READ(10,'(A200)')BUF200
+     READ(10,'(A15,A2)')BUF15,IRR_NAME
+     READ(10,'(A15,I)')BUF15,IRR
+     
+     READ(10,'(A200)')BUF200
+     READ(10,'(A15,A200)')BUF15,CRP_NAME
+     READ(10,'(A15,A200)')BUF15,CRP_FILE
+
+     READ(10,'(A200)')BUF200
+     READ(10,'(A15,A200)')BUF15,CNFILE
+     
+     READ(10,'(A200)')BUF200
+     READ(10,'(A15,A200)')BUF15,PLT_FILE
+     
+     READ(10,'(A200)')BUF200
+     READ(10,'(A15,A200)')BUF15,YLD_FILE
+     READ(10,'(A15,A200)')BUF15,PRM_FILE
+     READ(10,'(A15,A200)')BUF15,LAI_FILE
+     READ(10,'(A15,A200)')BUF15,WSH_FILE
+     READ(10,'(A15,A200)')BUF15,WSO_FILE
+     READ(10,'(A15,A200)')BUF15,WAR_FILE
+     READ(10,'(A15,A200)')BUF15,WST_FILE
+     READ(10,'(A15,A200)')BUF15,WLF_FILE
+     READ(10,'(A15,A200)')BUF15,WRT_FILE
+     READ(10,'(A15,A200)')BUF15,WDL_FILE
+
+     READ(10,'(A200)')BUF200
+     READ(10,'(A15,A200)')BUF15,CLIM_HEAD
+     READ(10,'(A15,A5)')BUF15,CLIM_FOOT
+
+     CLOSE(10)
+  END IF
+
+END SUBROUTINE RDSET
+
+SUBROUTINE RDPRM(VEGFILE,RESPCP,EFFCON,ATHETA,BTHETA,MH2O,BH2O,KN,LTCH,ZKCA,ZKCB,ZKOA,ZKOB,GMMA,GMMB,RLFV,TLFV,RLFN,TLFN,hDVS,CFLF,CFST,CFRT,CFSO,VN,TB,TO,TH,LEFY0,LEFX1,LEFY1,LEFX2,LEFY2,LEFX3,LEFY3,PNCLX1,PNCLY1,PNCLX2,PNCLY2,PNCLX3,PNCLY3,DLFX1,DLFY1,DLFX2,DLFY2,DLFX3,DLFY3,LLFst,kLLF,RTX,RTY,RTX2,FSTR,SLWYA,SLWYB,SLWX,HGTAA,HGTAB,HGTBA,HGTBB,GZRT,MXRT,GMMSL,SLNX1,SLNX2,SLNX3,SLNYMX,SLNYMN,SLNK,TCmin,THcrit,HI,PLTDIF,HVT_TAVE)
+
+   IMPLICIT NONE
+
+!  [INPUT]
+   CHARACTER*200 VEGFILE
+
+!  [OUTPUT]
+   REAL*8 RESPCP
+   REAL*8 EFFCON    !
+   REAL*8 ATHETA
+   REAL*8 BTHETA
+   REAL*8 MH2O
+   REAL*8 BH2O
+   REAL*8 KN
+   REAL*8 LTCH
+   REAL*8 ZKCA     ! Kc at 298K [Pa]
+   REAL*8 ZKCB     ! Parameter for temperature dependence of Kc [-]
+   REAL*8 ZKOA     ! Ko at 298K [Pa]
+   REAL*8 ZKOB     ! Parameter for temperature dependence of Ko [-]
+   REAL*8 GMMA     ! Parameter for temperature dependence of Gamma* [-]
+   REAL*8 GMMB     ! Parameter for temperature dependence of Gamma* [-]
+
+   REAL*8 RLFV
+   REAL*8 TLFV
+   REAL*8 RLFN
+   REAL*8 TLFN
+   REAL*8 hDVS  ! heading DVS
+   REAL*8  CFLF         ! Fraction for leave
+   REAL*8  CFST         ! Fraction for stem
+   REAL*8  CFRT         ! Fraction for root
+   REAL*8  CFSO         ! Fraction for storage orga
+   REAL*8  RTX
+   REAL*8  RTY
+   REAL*8  RTX2
+
+   INTEGER VN
+   REAL*8 TB
+   REAL*8 TO
+   REAL*8 TH
+
+   REAL*8  LEFY0
+   REAL*8  LEFX1
+   REAL*8  LEFY1
+   REAL*8  LEFX2
+   REAL*8  LEFY2
+   REAL*8  LEFX3
+   REAL*8  LEFY3
+   REAL*8  PNCLX1
+   REAL*8  PNCLY1
+   REAL*8  PNCLX2
+   REAL*8  PNCLY2
+   REAL*8  PNCLX3
+   REAL*8  PNCLY3
+   REAL*8  DLFX1
+   REAL*8  DLFY1
+   REAL*8  DLFX2
+   REAL*8  DLFY2
+   REAL*8  DLFX3
+   REAL*8  DLFY3
+   REAL*8  LLFst
+   REAL*8  kLLF
+   REAL*8  FSTR
+   REAL*8  SLWYA
+   REAL*8  SLWYB
+   REAL*8  SLWX
+   REAL*8  HGTAA
+   REAL*8  HGTAB
+   REAL*8  HGTBA
+   REAL*8  HGTBB
+   REAL*8 GZRT   !Growth rate of root  [m/day]
+   REAL*8 MXRT   !Maximum root length [m]
+   REAL*8 GMMSL  ! soil water stress factor
+   REAL*8 SLNX1
+   REAL*8 SLNX2
+   REAL*8 SLNX3
+   REAL*8 SLNYMX
+   REAL*8 SLNYMN
+   REAL*8 SLNK
+   REAL*8 TCmin
+   REAL*8 THcrit
+   REAL*8 HI
+   REAL*8 PLTDIF
+   REAL*8 HVT_TAVE
+
+!  [VARIABLE]
+   INTEGER IER
+
+!  [BUFFER VARIABLE]
+   CHARACTER*10 BUF10
+
+
+   OPEN(11,file=VEGFILE,status='old',iostat=IER)
+   IF(IER .NE. 0)THEN
+      WRITE(*,*)VEGFILE, "vege could not be opened"
+      STOP
+   ELSE
+      READ(11,'(A10,F)')BUF10,RESPCP
+      READ(11,'(A10,F)')BUF10,EFFCON
+      READ(11,'(A10,F)')BUF10,ATHETA
+      READ(11,'(A10,F)')BUF10,BTHETA
+      READ(11,'(A10,F)')BUF10,MH2O
+      READ(11,'(A10,F)')BUF10,BH2O
+      READ(11,'(A10,F)')BUF10,KN
+      READ(11,'(A10,F)')BUF10,LTCH
+      READ(11,'(A10,F)')BUF10,ZKCA
+      READ(11,'(A10,F)')BUF10,ZKCB
+      READ(11,'(A10,F)')BUF10,ZKOA
+      READ(11,'(A10,F)')BUF10,ZKOB
+      READ(11,'(A10,F)')BUF10,GMMA
+      READ(11,'(A10,F)')BUF10,GMMB
+      READ(11,'(A10,F)')BUF10,RLFV
+      READ(11,'(A10,F)')BUF10,TLFV
+      READ(11,'(A10,F)')BUF10,RLFN
+      READ(11,'(A10,F)')BUF10,TLFN
+      READ(11,'(A10,F)')BUF10,hDVS
+      READ(11,'(A10,F)')BUF10,CFLF
+      READ(11,'(A10,F)')BUF10,CFST
+      READ(11,'(A10,F)')BUF10,CFRT
+      READ(11,'(A10,F)')BUF10,CFSO
+      READ(11,'(A10,I)')BUF10,VN
+      READ(11,'(A10,F)')BUF10,TB
+      READ(11,'(A10,F)')BUF10,TO
+      READ(11,'(A10,F)')BUF10,TH
+      READ(11,'(A10,F)')BUF10,LEFY0
+      READ(11,'(A10,F)')BUF10,LEFX1
+      READ(11,'(A10,F)')BUF10,LEFY1
+      READ(11,'(A10,F)')BUF10,LEFX2
+      READ(11,'(A10,F)')BUF10,LEFY2
+      READ(11,'(A10,F)')BUF10,LEFX3
+      READ(11,'(A10,F)')BUF10,LEFY3
+      READ(11,'(A10,F)')BUF10,PNCLX1
+      READ(11,'(A10,F)')BUF10,PNCLY1
+      READ(11,'(A10,F)')BUF10,PNCLX2
+      READ(11,'(A10,F)')BUF10,PNCLY2
+      READ(11,'(A10,F)')BUF10,PNCLX3
+      READ(11,'(A10,F)')BUF10,PNCLY3
+      READ(11,'(A10,F)')BUF10,DLFX1
+      READ(11,'(A10,F)')BUF10,DLFY1
+      READ(11,'(A10,F)')BUF10,DLFX2
+      READ(11,'(A10,F)')BUF10,DLFY2
+      READ(11,'(A10,F)')BUF10,DLFX3
+      READ(11,'(A10,F)')BUF10,DLFY3
+      READ(11,'(A10,F)')BUF10,LLFst
+      READ(11,'(A10,F)')BUF10,kLLF
+      READ(11,'(A10,F)')BUF10,RTX
+      READ(11,'(A10,F)')BUF10,RTY
+      READ(11,'(A10,F)')BUF10,RTX2
+      READ(11,'(A10,F)')BUF10,FSTR
+      READ(11,'(A10,F)')BUF10,SLWYA
+      READ(11,'(A10,F)')BUF10,SLWYB
+      READ(11,'(A10,F)')BUF10,SLWX
+      READ(11,'(A10,F)')BUF10,HGTAA
+      READ(11,'(A10,F)')BUF10,HGTAB
+      READ(11,'(A10,F)')BUF10,HGTBA
+      READ(11,'(A10,F)')BUF10,HGTBB
+      READ(11,'(A10,F)')BUF10,GZRT
+      READ(11,'(A10,F)')BUF10,MXRT
+      READ(11,'(A10,F)')BUF10,GMMSL
+      READ(11,'(A10,F)')BUF10,SLNX1
+      READ(11,'(A10,F)')BUF10,SLNX2
+      READ(11,'(A10,F)')BUF10,SLNX3
+      READ(11,'(A10,F)')BUF10,SLNYMX
+      READ(11,'(A10,F)')BUF10,SLNYMN
+      READ(11,'(A10,F)')BUF10,SLNK
+      READ(11,'(A10,F)')BUF10,TCmin
+      READ(11,'(A10,F)')BUF10,THcrit
+      READ(11,'(A10,F)')BUF10,HI
+      READ(11,'(A10,F)')BUF10,PLTDIF
+      READ(11,'(A10,F)')BUF10,HVT_TAVE
+      
+      CLOSE(11)
+   END IF
+
+END SUBROUTINE RDPRM
+
+SUBROUTINE RDCLIM(VAR,HEAD,COUNTRY,REGION,CLIMNAME,IRR_NAME,SEASON,IYEAR,FOOT,NLON,NLAT,DAT_NTIME)
+
+   IMPLICIT NONE
+   INTEGER NLON,NLAT,DAT_NTIME
+   REAL*8 VAR(NLON,NLAT,DAT_NTIME)
+   
+   CHARACTER*200 HEAD
+   CHARACTER*200 FOOT
+   CHARACTER*50 COUNTRY
+   CHARACTER*50 REGION
+   CHARACTER*5 CLIMNAME
+   CHARACTER*5 IRR_NAME
+   CHARACTER*5 SEASON
+   INTEGER*4 IYEAR
+   
+   CHARACTER*4 YYYY
+   INTEGER DATE
+   INTEGER IER,iostatus
+   CHARACTER*200 FILE
+   
+   WRITE(YYYY,'(I4)')IYEAR
+   
+   !print *, YYYY
+   FILE=TRIM(ADJUSTL(HEAD))//TRIM(ADJUSTL(CLIMNAME))//'/'//TRIM(ADJUSTL(COUNTRY))//'/'//TRIM(ADJUSTL(YYYY))//'_'//TRIM(ADJUSTL(IRR_NAME))//TRIM(ADJUSTL(SEASON))//'_'//TRIM(ADJUSTL(CLIMNAME))//'_'//TRIM(ADJUSTL(REGION))//TRIM(ADJUSTL(FOOT))
+   !/home/tnakagawa/MATCRO_JAPAN/MATCRO_R/Sap/SET/1990_tmp_Sap.txt
+   
+   OPEN(12,file=trim(FILE),status='old',iostat=IER)
+   IF(IER .NE. 0)THEN
+      WRITE(*,*),"climate file could not be opened"
+      print *, FILE
+      STOP
+   ELSE
+      DO DATE=1,DAT_NTIME,1
+         READ(12,*,iostat=iostatus) VAR(NLON,NLAT,DATE)
+      END DO
+   END IF
+   CLOSE(12) 
+   
+END SUBROUTINE RDCLIM
+
+SUBROUTINE RDCO2_NFERT(VAR1,VAR2,CNFILE,YEAR)
+
+   IMPLICIT NONE
+   REAL*8 VAR1,VAR2
+   REAL*8 value
+ 
+   CHARACTER*200 CNFILE
+ 
+   INTEGER*4 IYEAR
+   INTEGER*4 YEAR
+   INTEGER DATE
+   INTEGER IER,iostatus
+   CHARACTER*200 FILE
+ 
+   CHARACTER*100 line
+ 
+   !print *, TRIM(CNFILE)
+ 
+   OPEN(12,file=trim(CNFILE),status='old',iostat=IER)
+   IF(IER .NE. 0)THEN
+      WRITE(*,*),"CO2 file could not be opened"
+      STOP
+   ELSE
+     read(12,'()') !unit
+     read(12,'()') !header
+
+      IF(YEAR /= 1896)THEN
+         DO DATE=1,YEAR-1896,1
+            READ(12,*,iostat=iostatus) line
+         END DO
+      END IF
+ 
+      READ(12,*,iostat=iostatus)IYEAR,VAR1,VAR2,line
+      IF(IYEAR /= YEAR)THEN
+       print *, YEAR,IYEAR,VAR1,VAR2,line
+       print *, "Error occured"
+       STOP
+      END IF
+      !print *,VAR1,VAR2
+ 
+   END IF
+   CLOSE(12) 
+   
+END SUBROUTINE RDCO2_NFERT
+
+SUBROUTINE RDPHN(VAR1,VAR2,PHNFILE,YEAR)
+
+   IMPLICIT NONE
+   REAL*8 VAR1,VAR2
+   REAL*8 value
+
+   CHARACTER*200 PHNFILE
+
+   INTEGER*4 IYEAR
+   INTEGER*4 YEAR
+   INTEGER DATE
+   INTEGER IER,iostatus
+   CHARACTER*200 FILE
+
+   CHARACTER*100 line
+
+   !print *, TRIM(CNFILE)
+
+   OPEN(12,file=trim(PHNFILE),status='old',iostat=IER)
+   IF(IER .NE. 0)THEN
+      WRITE(*,*),"phenology file could not be opened"
+      print *, PHNFILE
+      STOP
+   ELSE
+      read(12,'()') !header
+      IF(YEAR /= 1896)THEN
+         DO DATE=1,YEAR-1896,1
+            READ(12,*,iostat=iostatus) line
+         END DO
+      END IF
+
+      READ(12,*,iostat=iostatus) IYEAR,VAR1
+      IF(IYEAR /= YEAR)THEN
+         print *, YEAR,IYEAR,VAR1
+         print *, "Error occured"
+         STOP
+        END IF
+      !print *,VAR1,VAR2
+
+   END IF
+   CLOSE(12)
+
+END SUBROUTINE RDPHN
+
+SUBROUTINE RDLONLAT(OLON,OLAT,YEAR,LONLAT_FILE)
+
+   IMPLICIT NONE
+
+   !![OUPUT]!!
+   REAL*8 OLON   ! Longitude for point calculation
+   REAL*8 OLAT   ! Latitude for point calculation
+
+   !![INPUT]!!
+   CHARACTER*200 LONLAT_FILE
+   INTEGER*4 YEAR
+
+   INTEGER*4 IYEAR
+   INTEGER DATE
+   INTEGER IER,iostatus
+   CHARACTER*200 FILE
+
+   CHARACTER*100 line
+
+   !print *, TRIM(CNFILE)
+
+   OPEN(12,file=trim(LONLAT_FILE),status='old',iostat=IER)
+   IF(IER .NE. 0)THEN
+      WRITE(*,*),"lonlat file could not be opened"
+      print *, LONLAT_FILE
+      STOP
+   ELSE
+      read(12,'()') !header
+      IF(YEAR /= 1896)THEN
+         DO DATE=1,YEAR-1896,1
+            READ(12,*,iostat=iostatus) line
+         END DO
+      END IF
+
+      READ(12,*,iostat=iostatus) IYEAR,OLON,OLAT
+      IF(IYEAR /= YEAR)THEN
+         print *, YEAR,IYEAR,OLON,OLAT
+         print *, "Error occured"
+         STOP
+        END IF
+      !print *,VAR1,VAR2
+
+   END IF
+   CLOSE(12)
+
+END SUBROUTINE RDLONLAT
+
+
+
+SUBROUTINE RDPLT(PLT,YEAR,PREF,PLT_FILE)
+
+   IMPLICIT NONE
+ 
+   !![OUTPUT]
+   INTEGER PLT
+ 
+   CHARACTER*200 PLT_FILE
+   INTEGER PLT1,PLT2,PLT3,PLT4,PLT5,PLT6,PLT7,PLT8
+   CHARACTER*3 PREF,PREFNAME
+ 
+   INTEGER YEAR
+   INTEGER IER,i
+ 
+   OPEN(15,file=trim(adjustl(PLT_FILE)),status='old',iostat=IER)
+   IF(IER .NE. 0)THEN
+     WRITE(*,*),"plt_file could not be opened"
+     STOP
+   ELSE
+     DO i=1,47,1
+       READ(15,*) PREFNAME,PLT1,PLT2,PLT3,PLT4,PLT5,PLT6,PLT7,PLT8
+       IF(PREFNAME == PREF)THEN
+         EXIT
+       END IF
+     END DO
+   END IF
+   CLOSE(15)
+
+   IF(YEAR <= 1890)THEN
+      PLT = PLT1
+   ELSE IF(YEAR <= 1940)THEN
+      PLT = PLT1 + (YEAR-1890)*(PLT2-PLT1)/(1940-1890)
+   ELSE IF(YEAR <= 1960)THEN
+      PLT = PLT2 + (YEAR-1940)*(PLT3-PLT2)/(1960-1940)
+   ELSE IF(YEAR <= 1970)THEN
+      PLT = PLT3 + (YEAR-1960)*(PLT4-PLT3)/(1970-1960)
+   ELSE IF(YEAR <= 1980)THEN
+      PLT = PLT4 + (YEAR-1970)*(PLT5-PLT4)/(1980-1970)
+   ELSE IF(YEAR <= 1990)THEN
+      PLT = PLT5 + (YEAR-1980)*(PLT6-PLT5)/(1990-1980)
+   ELSE IF(YEAR <= 2000)THEN
+      PLT = PLT6 + (YEAR-1990)*(PLT7-PLT6)/(2000-1990)
+   ELSE IF(YEAR <= 2010)THEN
+      PLT = PLT7 + (YEAR-2000)*(PLT8-PLT7)/(2010-2000)
+   ELSE IF(YEAR > 2010)THEN
+      PLT = PLT8
+   END IF
+   
+   !print *, PLT
+ 
+END SUBROUTINE RDPLT
+
+SUBROUTINE WRTXT_YLD(STYR,ENYR,YLDFILE,DATA,NLON,NLAT)
+
+   IMPLICIT NONE
+   
+   INTEGER NLON,NLAT
+   INTEGER*4 STYR
+   INTEGER*4 ENYR
+   REAL*8 DATA(NLON,NLAT,(ENYR-STYR+1))
+   
+   CHARACTER*200 YLDFILE
+   
+   INTEGER YEAR
+   INTEGER IER,iostatus
+   
+   !print *, TRIM(YLDFILE)
+   
+   OPEN(12,file=trim(YLDFILE),status='replace',iostat=IER)
+   IF(IER .NE. 0)THEN
+      WRITE(*,*),"output file could not be opened"
+      print *, YLDFILE
+      STOP
+   ELSE
+      DO YEAR=1,(ENYR-STYR+1),1
+         WRITE(12,*) DATA(NLON,NLAT,YEAR)
+      END DO
+   END IF
+   CLOSE(12) 
+    
+END SUBROUTINE WRTXT_YLD
+
+SUBROUTINE WRCSV_GPP(YEAR,STDOY,ENDOY,GPP_FILE,DATA,DVS_DATA,NLON,NLAT,TRES)
+
+   IMPLICIT NONE
+   
+   INTEGER NLON,NLAT
+   INTEGER*4 YEAR,TRES
+   INTEGER STDOY,ENDOY
+   REAL*8 DATA(NLON,NLAT,(ENDOY-STDOY+1))
+   REAL*8 DVS_DATA(NLON,NLAT,(ENDOY-STDOY+1))
+   
+   CHARACTER*200 GPP_FILE
+   CHARACTER*200 OUT_FILE
+   
+   INTEGER DAY,IHOUR
+   INTEGER IER,iostatus
+   CHARACTER*4 YYYY
+
+   WRITE(YYYY,"(I4)") YEAR
+   OUT_FILE=TRIM(GPP_FILE)//TRIM(YYYY)//".csv"
+   
+   !PRINT *, YEAR,YYYY
+   !PRINT *, TRIM(OUT_FILE)
+   
+   OPEN(13,file=trim(OUT_FILE),status='replace',iostat=IER)
+   IF(IER .NE. 0)THEN
+      WRITE(*,*),"output file could not be opened"
+      print *, TRIM(OUT_FILE)
+      STOP
+   ELSE
+      WRITE(13, '(a)', advance='no') "DVS,VALUE"
+      WRITE(13, '(a)', advance='yes') ''
+      
+      DO DAY=1,(ENDOY-STDOY+1),1
+         !WRITE(13, '(i0)', advance='no') DAY
+         !WRITE(13, '(a)',  advance='no') ','
+         WRITE(13, '(F)', advance='no') DVS_DATA(NLON,NLAT,DAY)
+         WRITE(13, '(a)', advance='no') ','
+         WRITE(13, '(F)', advance='no') DATA(NLON,NLAT,DAY)
+         WRITE(13, '(a)', advance='yes') ''
+      END DO    !DAY
+   END IF
+   CLOSE(13) 
+    
+END SUBROUTINE WRCSV_GPP
+

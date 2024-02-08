@@ -1,0 +1,37 @@
+#####  [YEAR and TIME RESOLUTION]  ##### 
+MODE           ONE
+COUNTRY        Country
+CITY           Region
+STYR           10000
+ENYR           20000
+STDOY          1
+ENDOY          365
+PREFLON        100
+PREFLAT        100
+TRES           3600
+clmTRES        86400
+SEASON         season
+#####  [Irrigation] #####
+IRRF_NAME      irrf
+IRR            irrf
+#####  [CROP PARAMETER FILE]  #####
+CRP_NAME       Rice
+CRP_FILE       ./INPUT/Rice_GLBparam.txt
+#####  [CO2 & NFERT FILE]  #####
+C&N_FILE       ./INPUT/CO2_N2.txt
+#####  [PLANTING DAY FILE]  #####
+PLT_FILE       ./INPUT/PLT_day_taue.csv
+#####  [OUTPUT FILE]  #####
+YLD_FILE       ./YLD/Country/Region/YLD_Region_irrf_season_initial.txt
+PRM_FILE       ./PRM/Country/Region/PRM_Region_irrf_season_initial.txt
+LAI_FILE       ./LAImx/Country/Region/LAImx_Region_irrf_season_initial.txt
+WSH_FILE       ./WSH/Country/Region/WSH_Region_irrf_season_initial.txt
+WSO_FILE       ./WSO/Country/Region/WSO_Region_irrf_season_initial.txt
+WAR_FILE       ./WAR/Country/Region/WAR_Region_irrf_season_initial.txt
+WST_FILE       ./WST/Country/Region/WST_Region_irrf_season_initial.txt
+WLF_FILE       ./WLF/Country/Region/WLF_Region_irrf_season_initial.txt
+WRT_FILE       ./WRT/Country/Region/WRT_Region_irrf_season_initial.txt
+WDL_FILE       ./WDL/Country/Region/WDL_Region_irrf_season_initial.txt
+#####  [DIRECTORY SETTING]  #####
+CLIM_HEAD      /home/tnakagawa/MATCRO_ASIA/CLM/
+CLIM_FOOT      .txt
