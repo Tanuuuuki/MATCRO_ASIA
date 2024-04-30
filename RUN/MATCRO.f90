@@ -9,8 +9,9 @@ PROGRAM MATCRO
   
 
   !! [TIME and REGION] !!
-  CHARACTER*5 MODE  ! MODE for Calculation : POINT or SURFACE
-  CHARACTER*5 POINT ! Calculating point [-]
+  CHARACTER*5  MODE  ! MODE for Calculation : POINT or SURFACE
+  CHARACTER*50 COUNTRY ! Calculating country
+  CHARACTER*50 REGION ! Calculating region
   INTEGER STYR      ! Start year [Year]
   INTEGER ENYR      ! End year   [Year]
   INTEGER STDOY     ! Start DOY  [day]
@@ -19,8 +20,9 @@ PROGRAM MATCRO
 
   INTEGER TRES      ! Time resolution     [Second]
   INTEGER clmTRES  ! Time resolution of climate forcing [Second]
-  
+  CHARACTER*5 SEASON ! season; 1st 2nd 3rd
 
+  
 
   REAL*8  WEST      ! West edge  [degree]
   REAL*8  EAST      ! East edge  [degree]
@@ -41,13 +43,21 @@ PROGRAM MATCRO
   !! [INPUT FILE] !!
   CHARACTER*200 CNFILE     ! Head of input file name for atmospheric CO2
   CHARACTER*200 PLT_FILE   ! Foot of input file name for atmospheric CO2
+  CHARACTER*200 GDHm_FILE  ! Foot of input file name for atmospheric CO2
   CHARACTER*200 SMPL_FILE  ! Foot of input file name for atmospheric CO2
   
   !! [OUTPUT FILE] !!
-  CHARACTER*200 YLD_FILE   ! Output file name for yields of first growing season
-  CHARACTER*200 PRM_FILE   ! Output file name for PRM ← HI for final
-  CHARACTER*200 CDI_FILE   ! Output file name for PRM ← HI for final
-  
+  CHARACTER*200 YLD_FILE
+  CHARACTER*200 PRM_FILE
+  CHARACTER*200 LAI_FILE
+  CHARACTER*200 WSH_FILE
+  CHARACTER*200 WSO_FILE
+  CHARACTER*200 WAR_FILE
+  CHARACTER*200 WST_FILE
+  CHARACTER*200 WLF_FILE
+  CHARACTER*200 WRT_FILE
+  CHARACTER*200 WDL_FILE
+
   !! [OTHERs] !!
   REAL*8  WND_HGT          ! Hegith of input data for input [m]
   !INTEGER NGRW             ! Number of growing season in a year
@@ -195,7 +205,7 @@ PROGRAM MATCRO
   !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! !!
   INTEGER,ALLOCATABLE:: SOILTXT(:,:)    ! Soil texture            [-]
   INTEGER,ALLOCATABLE:: PLTDOY(:,:)   ! Planting doy            [DOY]
-  REAL*8, ALLOCATABLE:: GDHm(:,:)     ! GDH at maturity         [Degree seconds]
+  REAL*8, ALLOCATABLE:: GDHm(:,:)   ! GDH at maturity         [Degree seconds]
   REAL*8, ALLOCATABLE:: GDHh(:,:)     ! GDH at heading          [Degree seconds]
   REAL*8, ALLOCATABLE:: NFERT(:,:)      ! Nitrogen fertilizer application [kg/ha]
   REAL*8, ALLOCATABLE:: Vsat(:,:)        ! required vernarization days
@@ -207,6 +217,7 @@ PROGRAM MATCRO
   !! [INTERNAL VARIABLE] !!
   !! !!!!!!!!!!!!!!!!!!! !!
   INTEGER IRR         ! FLAG of irrigation     [-] IRR=1: IRRIGATION; IRR=0: RAINFED
+  CHARACTER*2 IRRF_NAME         ! FLAG of irrigation     [-] IRR=1: IRRIGATION; IRR=0: RAINFED
   !INTEGER GRW         ! FLAG of growing season [-] GRW=1: first growing season; GRW=2: second growing season  
   !INTEGER IGRW
   
@@ -287,6 +298,8 @@ PROGRAM MATCRO
   REAL*8 GRT
   REAL*8 GSO
   
+  REAL*8 GDHm_1st, GDHm_2nd, GDHm_3rd
+  INTEGER PLT_1st, PLT_2nd, PLT_3rd
 
 ! Storage for state variables
   REAL*8,ALLOCATABLE:: pWSL(:,:,:)
@@ -350,8 +363,8 @@ PROGRAM MATCRO
   REAL*8 SINB
   REAL*8 CALHOUR
 
-
-  
+  INTEGER FILE_CHECK
+  INTEGER PLT_ROW 
   !print *,"START"
 
 
@@ -360,8 +373,8 @@ PROGRAM MATCRO
   !! !!!!!!!!!!!!!!!!!!!! !!
   !!  <READ SETTING FILE> !!
   !! !!!!!!!!!!!!!!!!!!!! !!
-  CALl RDSET(MODE,POINT,STYR,ENYR,STDOY,ENDOY,POINTLON,POINTLAT,TRES,clmTRES,WEST,EAST,NORTH,SOUTH,WERES,NSRES,IRR,&
-             CRP_NAME,CRP_FILE,CNFILE,PLT_FILE,YLD_FILE,PRM_FILE,CDI_FILE,CLIM_HEAD,CLIM_FOOT,SMPL_FILE)
+  CALl RDSET(MODE,COUNTRY,REGION,STYR,ENYR,STDOY,ENDOY,POINTLON,POINTLAT,TRES,clmTRES,SEASON,WEST,EAST,NORTH,SOUTH,WERES,NSRES,IRRF_NAME,IRR,CRP_NAME,CRP_FILE,&
+             CNFILE,PLT_FILE,PLT_ROW,YLD_FILE,PRM_FILE,LAI_FILE,WSH_FILE,WSO_FILE,WAR_FILE,WST_FILE,WLF_FILE,WRT_FILE,WDL_FILE,CLIM_HEAD,CLIM_FOOT,GDHm_FILE,SMPL_FILE)
 
   NLON=1.D0
   NLAT=1.D0
@@ -473,6 +486,8 @@ PROGRAM MATCRO
   pGST(:,:)=0.D0
   pGRT(:,:)=0.D0
   pGSO(:,:)=0.D0
+
+  FILE_CHECK=0.D0
   
   !!!!! READING SMPL FILE !!!!!
   OPEN(20,file=SMPL_FILE,status='old',iostat=IER)
@@ -482,17 +497,18 @@ PROGRAM MATCRO
      print *,SMPL_FILE
      STOP
   ELSE
-   READ(20,*) SLNYMN
-   READ(20,*) HI
+   READ(20,*) LEFY0
+   READ(20,*) PNCLY2
    READ(20,*) TCmin
    READ(20,*) THcrit
-   !READ(20,*) SLNY1
-   !READ(20,*) GDHh(NLON,NLAT)
-   READ(20,*) hDVS
-   READ(20,*) GDHm(NLON,NLAT)
+   READ(20,*) SLWYA
+   !READ(20,*) GDHm(NLON,NLAT)
 END IF
 CLOSE(20)
-
+!print *, "reading SMPL OK"
+!print *, LEFY0, PNCLY2, TCmin, THcrit, SLWYA
+LEFY1 = LEFY0
+PNCLY3 = PNCLY2
 SLNY1=1.D0
 
   !! !!!!!!!!!!!!!!!!!!! !!
@@ -507,19 +523,19 @@ SLNY1=1.D0
    !! !!!!!!!!!!!!!!!!!!!!! !!
    
    IF(MODE=="ONE")THEN
-      CALL RDCLIM(INTMN,CLIM_HEAD,POINT,'tmin ',YEAR,CLIM_FOOT,NLON,NLAT,365)
+      CALL RDCLIM(INTMN,CLIM_HEAD,COUNTRY,REGION,'tmin ',IRRF_NAME,SEASON,YEAR,CLIM_FOOT,NLON,NLAT,365,FILE_CHECK)
       !print *,"TMN OK"
-      CALL RDCLIM(INTMX,CLIM_HEAD,POINT,'tmax ',YEAR,CLIM_FOOT,NLON,NLAT,365)
+      CALL RDCLIM(INTMX,CLIM_HEAD,COUNTRY,REGION,'tmax ',IRRF_NAME,SEASON,YEAR,CLIM_FOOT,NLON,NLAT,365,FILE_CHECK)
       !print *,"TMX OK"
-      CALL RDCLIM(INPRC,CLIM_HEAD,POINT,'prc  ',YEAR,CLIM_FOOT,NLON,NLAT,365)
+      CALL RDCLIM(INPRC,CLIM_HEAD,COUNTRY,REGION,'prc  ',IRRF_NAME,SEASON,YEAR,CLIM_FOOT,NLON,NLAT,365,FILE_CHECK)
       !print *,"PRC OK"
-      CALL RDCLIM(INRSD,CLIM_HEAD,POINT,'rsd  ',YEAR,CLIM_FOOT,NLON,NLAT,365)
+      CALL RDCLIM(INRSD,CLIM_HEAD,COUNTRY,REGION,'rsd  ',IRRF_NAME,SEASON,YEAR,CLIM_FOOT,NLON,NLAT,365,FILE_CHECK)
       !print *,"RSD OK"
-      CALL RDCLIM(INSHM,CLIM_HEAD,POINT,'shm  ',YEAR,CLIM_FOOT,NLON,NLAT,365)
+      CALL RDCLIM(INSHM,CLIM_HEAD,COUNTRY,REGION,'shm  ',IRRF_NAME,SEASON,YEAR,CLIM_FOOT,NLON,NLAT,365,FILE_CHECK)
       !print *,"SHM OK"
-      CALL RDCLIM(INWND,CLIM_HEAD,POINT,'wnd  ',YEAR,CLIM_FOOT,NLON,NLAT,365)
+      CALL RDCLIM(INWND,CLIM_HEAD,COUNTRY,REGION,'wnd  ',IRRF_NAME,SEASON,YEAR,CLIM_FOOT,NLON,NLAT,365,FILE_CHECK)
       !print *,"WND OK"
-      CALL RDCLIM(INPRS,CLIM_HEAD,POINT,'prs  ',YEAR,CLIM_FOOT,NLON,NLAT,365)
+      CALL RDCLIM(INPRS,CLIM_HEAD,COUNTRY,REGION,'prs  ',IRRF_NAME,SEASON,YEAR,CLIM_FOOT,NLON,NLAT,365,FILE_CHECK)
       !print *,"PRS OK"
       INOZN=0.0D0
       
@@ -527,6 +543,14 @@ SLNY1=1.D0
       
    END IF
    
+   IF (FILE_CHECK .gt. 0) THEN
+      !print *, FILE_CHECK
+      IF (YEAR .EQ. 2015) THEN
+         EXIT
+      ELSE
+         CYCLE
+      END IF
+   END IF
    !! <NITROGEN>
    
    DO I=1,NLON
@@ -550,11 +574,21 @@ SLNY1=1.D0
      YLD(:,:,YEAR-STYR+1)=0.D0
      LAImx(:,:,YEAR-STYR+1)=0.D0
      
-     CALL RDPLT(PLTDOY(NLON,NLAT),YEAR,POINT,PLT_FILE)
-     
-    PNCLY2 = 0.7D0 + 0.3D0 / (1960-1896) * (YEAR-1896)
-    PNCLY2 = min(PNCLY2,1.D0)
-    PNCLY3 = PNCLY2
+     CALL RDPLT(PLT_1st,PLT_2nd,PLT_3rd,YEAR,COUNTRY,REGION,PLT_FILE,PLT_ROW)
+     CALL RDPHN(GDHm_1st,GDHm_2nd,GDHm_3rd,GDHm_FILE,YEAR)
+     IF (SEASON == "1st") THEN
+      PLTDOY(NLON,NLAT)=PLT_1st
+      GDHm(NLON,NLAT)=GDHm_1st
+     ELSE IF (SEASON == "2nd") THEN
+      PLTDOY(NLON,NLAT)=PLT_2nd
+      GDHm(NLON,NLAT)=GDHm_2nd
+     ELSE IF (SEASON == "3rd") THEN
+      PLTDOY(NLON,NLAT)=PLT_3rd
+      GDHm(NLON,NLAT)=GDHm_3rd
+     END IF
+
+     GDHm(NLON,NLAT)=3000.D0
+
 
      DO ILON=1,NLON
 
@@ -577,7 +611,7 @@ SLNY1=1.D0
             LON = LON - 360.D0
          END IF
            
-!                    print *,GDHm(ILON,ILAT,1,GRW),PLTDOY(ILON,ILAT,1,GRW),LON,LAT
+                    !print *,GDHm(ILON,ILAT),PLTDOY(ILON,ILAT),LON,LAT
                        
                     IF(LND(ILON,ILAT) > 0.D0 .AND. NFERT(ILON,ILAT) > -1.D0 .AND. &
                        PLTDOY(ILON,ILAT) < 1000 .AND. PLTDOY(ILON,ILAT) > 0 .AND. &
@@ -780,8 +814,7 @@ SLNY1=1.D0
               ! tentative yield
               CALL WRTXT_YLD(STYR,ENYR,YLD_FILE,YLD(NLON,NLAT,:),NLON,NLAT) !YLD
               CALL WRTXT_YLD(STYR,ENYR,PRM_FILE,PRM(NLON,NLAT,:),NLON,NLAT) !HI
-              CALL WRTXT_YLD(STYR,ENYR,CDI_FILE,OCDI(NLON,NLAT,:),NLON,NLAT)
-              
+              !CALL WRTXT_YLD(STYR,ENYR,CDI_FILE,OCDI(NLON,NLAT,:),NLON,NLAT)
             END DO            ! YEAR
          !print *,YLD(NLON,NLAT,:)
          !print *,PRM(NLON,NLAT,:)

@@ -6,8 +6,8 @@ STYR           10000
 ENYR           20000
 STDOY          1
 ENDOY          365
-PREFLON        100
-PREFLAT        100
+PREFLON        lon
+PREFLAT        lat
 TRES           3600
 clmTRES        86400
 SEASON         season
@@ -18,9 +18,10 @@ IRR            irrf
 CRP_NAME       Rice
 CRP_FILE       ./INPUT/Rice_GLBparam.txt
 #####  [CO2 & NFERT FILE]  #####
-C&N_FILE       ./INPUT/CO2_N2.txt
+C&N_FILE       ./INPUT/CO2_N2/Country/Region_CO2_N2_irrf_.txt
 #####  [PLANTING DAY FILE]  #####
-PLT_FILE       ./INPUT/PLT_day_taue.csv
+PLT_FILE       ./INPUT/PLANT_DOY/PLT_irrf_.csv
+PLT_ROW        csv_row
 #####  [OUTPUT FILE]  #####
 YLD_FILE       ./YLD/Country/Region/YLD_Region_irrf_season_ori.txt
 PRM_FILE       ./PRM/Country/Region/PRM_Region_irrf_season_ori.txt
@@ -35,3 +36,5 @@ WDL_FILE       ./WDL/Country/Region/WDL_Region_irrf_season_ori.txt
 #####  [DIRECTORY SETTING]  #####
 CLIM_HEAD      /home/tnakagawa/MATCRO_ASIA/CLM/
 CLIM_FOOT      .txt
+GDHm_FILE      /home/tnakagawa/MATCRO_ASIA/INPUT/GDHm/Country/Region_irrf__GDHm.csv
+SMPL_FILE      ./SMPL/Country/Region/SMPL_Region_ori.txt
